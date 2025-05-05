@@ -18,10 +18,10 @@ jobs:
       ver: ${{ steps.get_latest.outputs.ver }}
 
     steps:
-      - name: Install Utilities
+      - name: Install utilities
         run: sudo apt-get update && sudo apt-get install -y jq curl git
 
-      - name: Get Latest Iosevka Tag Info
+      - name: Get latest Iosevka tag
         id: get_latest
         run: |
           HTTP_RESPONSE=$(curl -sL -w "%{http_code}" -o response.json "https://api.github.com/repos/be5invis/Iosevka/releases/latest")
@@ -58,7 +58,7 @@ jobs:
       FONT_NAME: "IosevkaTermSS04"
 
     steps:
-      - name: Setup Core Dependencies
+      - name: Setup core dependencies
         run: |
           sudo apt update -y -q
           sudo apt install software-properties-common unzip curl -y -q
@@ -81,28 +81,28 @@ jobs:
           which fontforge
           fontforge --version
 
-      - name: Download Font Patcher
+      - name: Download font patcher
         run: |
           curl -L "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FontPatcher.zip" -o "FontPatcher.zip"
           unzip "FontPatcher.zip"
           ls -lh
           chmod +x ./font-patcher
 
-      - name: Download the Iosevka Font
+      - name: Download the Iosevka font
         run: |
           mkdir -p $GITHUB_WORKSPACE/downloaded_font
           curl -L "https://github.com/be5invis/Iosevka/releases/download/${{ needs.check.outputs.tag }}/SuperTTC-SGr-${{ env.FONT_NAME }}-${{ needs.check.outputs.ver }}.zip" \
             -o "$GITHUB_WORKSPACE/downloaded_font/${{ env.FONT_NAME }}.zip"
           unzip "$GITHUB_WORKSPACE/downloaded_font/${{ env.FONT_NAME }}.zip" -d "$GITHUB_WORKSPACE/downloaded_font"
 
-      - name: Patch the Iosevka Font
+      - name: Patch the Iosevka font
         run: |
           mkdir -p $GITHUB_WORKSPACE/patched_font
           fontforge --script ./font-patcher "$GITHUB_WORKSPACE/downloaded_font/SGr-${{ env.FONT_NAME }}.ttc" \
-            --complete --quiet --no-progressbars --outputdir $GITHUB_WORKSPACE/patched_font/
+            --weather --quiet --no-progressbars --outputdir $GITHUB_WORKSPACE/patched_font/
           ls -lh "$GITHUB_WORKSPACE/patched_font"
 
-      - name: Create Release with Patched Fonts
+      - name: Create release with patched fonts
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.check.outputs.ver }}

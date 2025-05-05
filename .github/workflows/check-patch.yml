@@ -101,3 +101,12 @@ jobs:
           fontforge --script ./font-patcher "$GITHUB_WORKSPACE/downloaded_font/SGr-${{ env.FONT_NAME }}.ttc" \
             --complete --quiet --no-progressbars --outputdir $GITHUB_WORKSPACE/patched_font/
           ls -lh "$GITHUB_WORKSPACE/patched_font"
+
+      - name: Create Release with Patched Fonts
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.check.outputs.ver }}
+          body: |
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          files: patched_font/*
+          fail_on_unmatched_files: true

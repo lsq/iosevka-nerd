@@ -1,8 +1,9 @@
 name: "Update and Patch Iosevka Font"
 
 on:
-  schedule:
-    - cron: "0 5 * * *"
+  push:
+    branches: [main]
+  schedule: [cron: "0 5 * * *"]
   workflow_dispatch:
 
 permissions:

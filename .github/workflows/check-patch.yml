@@ -11,12 +11,11 @@ permissions:
 
 jobs:
   check:
-    name: Check for New Iosevka Version
     runs-on: ubuntu-latest
     outputs:
-      build_needed: ${{ steps.check_local_tag.outputs.build_needed }}
-      tag: ${{ steps.get_latest.outputs.latest_tag }}
-      version: ${{ steps.get_latest.outputs.version }}
+      build: ${{ steps.check_local.outputs.build }}
+      tag: ${{ steps.get_latest.outputs.tag }}
+      ver: ${{ steps.get_latest.outputs.ver }}
 
     steps:
       - name: Install Utilities
@@ -31,30 +30,32 @@ jobs:
           if [[ ! "$IOSEVKA_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then echo "Error: Invalid tag format ('$IOSEVKA_TAG')."; exit 1; fi
           IOSEVKA_VER=$(echo "$IOSEVKA_TAG" | sed 's/^v//')
           echo "Latest Version: $IOSEVKA_VER"
+          echo "tag=$IOSEVKA_TAG" >> $GITHUB_OUTPUT
+          echo "ver=$IOSEVKA_VER" >> $GITHUB_OUTPUT
 
       - name: Check if latest version exists
         id: check_local
+        env:
+          EXPECTED_TAG: ${{ steps.get_latest.outputs.ver }}
         run: |
-          EXPECTED_TAG="${{ steps.get_latest.outputs.version }}"
-          git fetch --depth=1 origin "+refs/tags/*:refs/tags/*"
-
-          if git rev-parse "$EXPECTED_TAG" >/dev/null 2>&1; then
-            echo "Tag $EXPECTED_TAG already exists. No build needed."
-            echo "build_needed=false" >> $GITHUB_OUTPUT
+          if git ls-remote --exit-code --tags "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" "refs/tags/${EXPECTED_TAG}" >/dev/null 2>&1; then
+              echo "Tag $EXPECTED_TAG exists on remote. No build needed."
+              echo "build=false" >> $GITHUB_OUTPUT
+          elif [ $? -eq 2 ]; then
+              echo "Tag $EXPECTED_TAG does not exist on remote. Build is needed."
+              echo "build=true" >> $GITHUB_OUTPUT
           else
-            echo "Tag $EXPECTED_TAG does not exist. Build is needed."
-            echo "build_needed=true" >> $GITHUB_OUTPUT
+              echo "Error running git ls-remote: exit code $?."
+              exit 1
           fi
 
   patch:
     runs-on: ubuntu-latest
     needs: check
-    if: needs.check.outputs.build_needed == 'true'
+    if: needs.check.outputs.build == 'true'
 
     env:
       FONT_NAME: "IosevkaTermSS04"
-      TAG: ${{ needs.check.outputs.latest_tag }}
-      VERSION: ${{ needs.check.outputs.version }}
 
     steps:
       - name: Setup Core Dependencies
@@ -90,7 +91,7 @@ jobs:
       - name: Download the Iosevka Font
         run: |
           mkdir -p $GITHUB_WORKSPACE/downloaded_font
-          curl -L "https://github.com/be5invis/Iosevka/releases/download/latest/SuperTTC-SGr-${{ env.FONT_NAME }}-${{ env.VERSION }}.zip" \
+          curl -L "https://github.com/be5invis/Iosevka/releases/download/${{ needs.check.outputs.tag }}/SuperTTC-SGr-${{ env.FONT_NAME }}-${{ needs.check.outputs.ver }}.zip" \
             -o "$GITHUB_WORKSPACE/downloaded_font/${{ env.FONT_NAME }}.zip"
           unzip "$GITHUB_WORKSPACE/downloaded_font/${{ env.FONT_NAME }}.zip" -d "$GITHUB_WORKSPACE/downloaded_font"
 

@@ -81,7 +81,7 @@ jobs:
           which fontforge
           fontforge --version
 
-      - name: Download font patcher
+      - name: Download font-patcher
         run: |
           curl -L "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FontPatcher.zip" -o "FontPatcher.zip"
           unzip "FontPatcher.zip"
@@ -96,10 +96,11 @@ jobs:
           unzip "$GITHUB_WORKSPACE/downloaded_font/${{ env.FONT_NAME }}.zip" -d "$GITHUB_WORKSPACE/downloaded_font"
 
       - name: Patch the Iosevka font
+        timeout-minutes: 60
         run: |
           mkdir -p $GITHUB_WORKSPACE/patched_font
           fontforge --script ./font-patcher "$GITHUB_WORKSPACE/downloaded_font/SGr-${{ env.FONT_NAME }}.ttc" \
-            --weather --quiet --no-progressbars --outputdir $GITHUB_WORKSPACE/patched_font/
+            --complete --quiet --no-progressbars --outputdir $GITHUB_WORKSPACE/patched_font/
           ls -lh "$GITHUB_WORKSPACE/patched_font"
 
       - name: Create release with patched fonts

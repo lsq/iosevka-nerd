@@ -38,7 +38,7 @@ jobs:
         env:
           EXPECTED_TAG: ${{ steps.get_latest.outputs.ver }}
         run: |
-          if git ls-remote --exit-code --tags "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" "refs/tags/${EXPECTED_TAG}" >/dev/null 2>&1; then
+          if git ls-remote --exit-code --tags "${{ github.server_url }}/${{ github.repository }}.git" "refs/tags/${EXPECTED_TAG}" >/dev/null 2>&1; then
               echo "Tag $EXPECTED_TAG exists on remote. No build needed."
               echo "build=false" >> $GITHUB_OUTPUT
           elif [ $? -eq 2 ]; then

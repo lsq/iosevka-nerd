@@ -73,9 +73,9 @@ jobs:
           #  --output "FontForge.${{ env.FF_ARCHIVE_TYPE }}"
           curl -L https://github.com/fontforge/fontforge/archive/refs/heads/master.zip --output FontForge.zip
           #tar -xf "FontForge.${{ env.FF_ARCHIVE_TYPE }}"
-          unzip FontForge.zip
+          unzip FontForge.zip -d fontforge
           #cd "fontforge-${{ env.FF_VERSION }}/"
-          cd FontForge
+          cd fontforge || exit 1
           mkdir build
           cd build
           cmake -GNinja ..

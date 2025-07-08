@@ -73,16 +73,16 @@ jobs:
           #  --output "FontForge.${{ env.FF_ARCHIVE_TYPE }}"
           curl -L https://github.com/fontforge/fontforge/archive/refs/heads/master.zip --output FontForge.zip
           #tar -xf "FontForge.${{ env.FF_ARCHIVE_TYPE }}"
-          unzip FontForge.zip -d fontforge
+          unzip FontForge.zip
           #cd "fontforge-${{ env.FF_VERSION }}/"
-          cd fontforge || exit 1
+          cd fontforge-master || exit 1
           mkdir build
           cd build
           cmake -GNinja ..
           ninja
           sudo ninja install
           cd ../../
-          7z a -mx=9 FontForge.7z FontForge
+          7z a -mx=9 FontForge.7z fontforge-master
           which fontforge
           fontforge --version
 

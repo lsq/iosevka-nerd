@@ -3,7 +3,7 @@ name: "Update and Patch Iosevka Font"
 on:
   push:
     branches: [main]
-  schedule: [cron: "0 5 * * *"]
+  schedule: [cron: "0 5 1/5 * *"]
   workflow_dispatch:
 
 permissions:
@@ -55,7 +55,7 @@ jobs:
     if: needs.check.outputs.build == 'true'
 
     env:
-      FONT_NAME: "IosevkaTermSS04"
+      FONT_NAME: "IosevkaTermSS03"
 
     steps:
       - name: Setup core dependencies
@@ -69,15 +69,20 @@ jobs:
           FF_ARCHIVE_TYPE: "tar.xz"
         run: |
           sudo apt install libjpeg-dev libtiff5-dev libpng-dev libfreetype6-dev libgif-dev libgtk-3-dev libxml2-dev libpango1.0-dev libcairo2-dev libspiro-dev python3-dev ninja-build cmake build-essential gettext libuninameslist-dev -y -q
-          curl -L "https://github.com/fontforge/fontforge/releases/download/${{ env.FF_VERSION }}/fontforge-${{ env.FF_VERSION }}.${{ env.FF_ARCHIVE_TYPE }}" \
-            --output "FontForge.${{ env.FF_ARCHIVE_TYPE }}"
-          tar -xf "FontForge.${{ env.FF_ARCHIVE_TYPE }}"
-          cd "fontforge-${{ env.FF_VERSION }}/"
+          #curl -L "https://github.com/fontforge/fontforge/releases/download/${{ env.FF_VERSION }}/fontforge-${{ env.FF_VERSION }}.${{ env.FF_ARCHIVE_TYPE }}" \
+          #  --output "FontForge.${{ env.FF_ARCHIVE_TYPE }}"
+          curl -L https://github.com/fontforge/fontforge/archive/refs/heads/master.zip --output FontForge.zip
+          #tar -xf "FontForge.${{ env.FF_ARCHIVE_TYPE }}"
+          unzip FontForge.zip
+          #cd "fontforge-${{ env.FF_VERSION }}/"
+          cd FontForge
           mkdir build
           cd build
           cmake -GNinja ..
           ninja
           sudo ninja install
+          cd ../../
+          7z a -mx=9 FontForge.7z FontForge
           which fontforge
           fontforge --version
 
@@ -91,7 +96,7 @@ jobs:
       - name: Download the Iosevka font
         run: |
           mkdir -p $GITHUB_WORKSPACE/downloaded_font
-          curl -L "https://github.com/be5invis/Iosevka/releases/download/${{ needs.check.outputs.tag }}/SuperTTC-SGr-${{ env.FONT_NAME }}-${{ needs.check.outputs.ver }}.zip" \
+          curl -L "https://github.com/be5invis/Iosevka/releases/download/${{ needs.check.outputs.tag }}/PkgTTF-${{ env.FONT_NAME }}-${{ needs.check.outputs.ver }}.zip" \
             -o "$GITHUB_WORKSPACE/downloaded_font/${{ env.FONT_NAME }}.zip"
           unzip "$GITHUB_WORKSPACE/downloaded_font/${{ env.FONT_NAME }}.zip" -d "$GITHUB_WORKSPACE/downloaded_font"
 
@@ -99,7 +104,7 @@ jobs:
         timeout-minutes: 60
         run: |
           mkdir -p $GITHUB_WORKSPACE/patched_font
-          fontforge --script ./font-patcher "$GITHUB_WORKSPACE/downloaded_font/SGr-${{ env.FONT_NAME }}.ttc" \
+          fontforge --script ./font-patcher "$GITHUB_WORKSPACE/downloaded_font/PkgTTF-${{ env.FONT_NAME }}-Regular.ttf" \
             --complete --quiet --no-progressbars --outputdir $GITHUB_WORKSPACE/patched_font/
           ls -lh "$GITHUB_WORKSPACE/patched_font"
 
@@ -109,5 +114,7 @@ jobs:
           tag_name: ${{ needs.check.outputs.ver }}
           body: |
             ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          files: patched_font/*
+          files: |
+            patched_font/*
+            FontForge.7z
           fail_on_unmatched_files: true

@@ -71,18 +71,19 @@ jobs:
           sudo apt install libjpeg-dev libtiff5-dev libpng-dev libfreetype6-dev libgif-dev libgtk-3-dev libxml2-dev libpango1.0-dev libcairo2-dev libspiro-dev python3-dev ninja-build cmake build-essential gettext libuninameslist-dev libgtkmm-3.0-dev -y -q
           #curl -L "https://github.com/fontforge/fontforge/releases/download/${{ env.FF_VERSION }}/fontforge-${{ env.FF_VERSION }}.${{ env.FF_ARCHIVE_TYPE }}" \
           #  --output "FontForge.${{ env.FF_ARCHIVE_TYPE }}"
-          curl -L https://github.com/fontforge/fontforge/archive/refs/heads/master.zip --output FontForge.zip
+          git clone https://github.com/fontforge/fontforge
+          #curl -L https://github.com/fontforge/fontforge/archive/refs/heads/master.zip --output FontForge.zip
           #tar -xf "FontForge.${{ env.FF_ARCHIVE_TYPE }}"
-          unzip FontForge.zip
+          #unzip FontForge.zip
           #cd "fontforge-${{ env.FF_VERSION }}/"
-          cd fontforge-master || exit 1
+          cd fontforge || exit 1
           mkdir build
           cd build
           cmake -GNinja ..
           ninja
           sudo ninja install
           cd ../../
-          7z a -mx=9 FontForge.7z fontforge-master
+          7z a -mx=9 FontForge.7z fontforge
           which fontforge
           fontforge --version
 
@@ -104,7 +105,7 @@ jobs:
         timeout-minutes: 60
         run: |
           mkdir -p $GITHUB_WORKSPACE/patched_font
-          fontforge --script ./font-patcher "$GITHUB_WORKSPACE/downloaded_font/PkgTTF-${{ env.FONT_NAME }}-Regular.ttf" \
+          fontforge --script ./font-patcher "$GITHUB_WORKSPACE/downloaded_font/${{ env.FONT_NAME }}-Regular.ttf" \
             --complete --quiet --no-progressbars --outputdir $GITHUB_WORKSPACE/patched_font/
           ls -lh "$GITHUB_WORKSPACE/patched_font"
 
